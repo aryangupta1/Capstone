@@ -1,6 +1,10 @@
-import React, { useState } from 'react'
-import { User } from '../../types/user'
-import './dashboard.css'
+import React, { useState } from 'react';
+import { User } from '../../types/user';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import './dashboard.css';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,15 +21,27 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div>
-      <button onClick={fetchUserData}>Fetch User Data</button>
+    <div className="dashboard-container">
+      <Button variant="contained" color="primary" onClick={fetchUserData}>
+        Fetch User Data
+      </Button>
       {user && (
-        <div>
-          <h2>User Details</h2>
-          <p>ID: {user.id}</p>
-          <p>Name: {user.name}</p>
-          <p>Data: {user.data}</p>
-        </div>
+        <Card className="user-card">
+          <CardContent>
+            <Typography variant="h5" component="div">
+              User Details
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              ID: {user.id}
+            </Typography>
+            <Typography variant="body1">
+              Name: {user.name}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Data: {user.data}
+            </Typography>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
