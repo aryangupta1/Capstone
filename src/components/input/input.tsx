@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { TextField, Button, Card, CardContent, Typography } from '@mui/material';
 import { User } from '../../types/user';
+import Web3 from 'web3'
 
 interface Props {
   onSave: (data: User) => void;
+  web3: Web3 | null;
+
 }
 
-const Input: React.FC<Props> = ({ onSave }) => {
+const Input: React.FC<Props> = ({ onSave, web3 }) => {
   const [inputData, setInputData] = useState<string>('');
 
   const handleSave = () => {

@@ -13,14 +13,29 @@ import Input from '../input/input'
 import { v4 as uuid } from 'uuid'
 import Box from '@mui/material/Box'
 import './dashboard.css'
+import Web3 from 'web3'
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  web3: Web3 | null
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ web3 }) => {
+
+
+  // smart contract instance
+  // const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace with your deployed contract address
+  // const contractABI = []; // Replace with your contract ABI
+
+  // const contractInstance = new web3.eth.Contract(contractABI, contractAddress)
+
+
   const [users, setUsers] = useState<User[]>([])
   const [editMode, setEditMode] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<string>('')
 
   const handleSaveData = (userData: User) => {
     userData.id = uuid()
+
     const existingData = sessionStorage.getItem('userData')
     let newUserData: User[] = existingData ? JSON.parse(existingData) : []
     newUserData.push(userData)
@@ -61,7 +76,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box className="dashboard-container" sx={{ p: 2 }}>
-        <Input onSave={handleSaveData} />
+      <Input onSave={handleSaveData} web3={web3} />
         <Box sx={{ mt: 2 }}>
             <Button variant="contained" color="primary" onClick={retrieveUserData}>
                 Retrieve Saved User Data
