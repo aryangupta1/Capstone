@@ -7,12 +7,17 @@ import ListItemText from '@mui/material/ListItemText'
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
+import TextField from '@mui/material/TextField'
 import Input from '../input/input'
 import { v4 as uuid } from 'uuid'
+import Box from '@mui/material/Box'
 import './dashboard.css'
 
 const Dashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
+  const [editMode, setEditMode] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState<string>('')
 
   const handleSaveData = (userData: User) => {
     userData.id = uuid()
@@ -36,29 +41,64 @@ const Dashboard: React.FC = () => {
     sessionStorage.setItem('userData', JSON.stringify(filteredUsers))
   }
 
+  const handleEdit = (id: string) => {
+    setEditMode(id)
+    const userToEdit = users.find(user => user.id === id)
+    if (userToEdit) {
+      setEditValue(userToEdit.data)
+    }
+  }
+
+  const handleConfirmEdit = (id: string) => {
+    const updatedUsers = users.map(user => 
+      user.id === id ? { ...user, data: editValue } : user
+    )
+    setUsers(updatedUsers)
+    sessionStorage.setItem('userData', JSON.stringify(updatedUsers))
+    setEditMode(null)
+    setEditValue('')
+  }
+
   return (
-    <div className="dashboard-container">
-      <Input onSave={handleSaveData} />
-      <Button variant="contained" color="primary" onClick={retrieveUserData}>
-        Retrieve Saved User Data
-      </Button>
-      <List>
-        {users.map(user => (
-          <ListItem key={user.id}>
-            <ListItemText
-              primary={user.name}
-              secondary={`ID: ${user.id}, Data: ${user.data}`}
-            />
-            <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(user.id)}>
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
-    </div>
-  )
+    <Box className="dashboard-container" sx={{ p: 2 }}>
+        <Input onSave={handleSaveData} />
+        <Box sx={{ mt: 2 }}>
+            <Button variant="contained" color="primary" onClick={retrieveUserData}>
+                Retrieve Saved User Data
+            </Button>
+        </Box>
+        <List sx={{ mt: 3 }}>
+            {users.map(user => (
+                <ListItem key={user.id} className="list-item">
+                    {editMode === user.id ? (
+                        <div className="edit-mode">
+                            <TextField 
+                                value={editValue} 
+                                onChange={(e) => setEditValue(e.target.value)} 
+                            />
+                            <Button onClick={() => handleConfirmEdit(user.id)}>Confirm</Button>
+                        </div>
+                    ) : (
+                        <ListItemText
+                            primary={user.name}
+                            secondary={`ID: ${user.id}, Data: ${user.data}`}
+                        />
+                    )}
+                    <ListItemSecondaryAction>
+                        {editMode !== user.id && (
+                            <IconButton edge="end" aria-label="edit" onClick={() => handleEdit(user.id)}>
+                                <EditIcon />
+                            </IconButton>
+                        )}
+                        <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(user.id)}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </ListItemSecondaryAction>
+                </ListItem>
+            ))}
+        </List>
+    </Box>
+)
 }
 
 export default Dashboard
