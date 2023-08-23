@@ -2,8 +2,20 @@ module.exports = {
   networks: {
     development: {
       host: "localhost",
-      port: 8545,
+      port: 7545,
       network_id: "*"
+    }
+  },
+
+  compilers: {
+    solc: {
+      version: "0.8.0",  // Change this to whatever version is specified in your contract's pragma statement
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        }
+      }
     }
   }
 }
