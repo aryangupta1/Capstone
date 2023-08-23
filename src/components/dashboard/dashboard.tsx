@@ -75,8 +75,16 @@ const Dashboard: React.FC = () => {
                             <TextField 
                                 value={editValue} 
                                 onChange={(e) => setEditValue(e.target.value)} 
+                                variant="outlined"  /* Outlined variant for the input */
                             />
-                            <Button onClick={() => handleConfirmEdit(user.id)}>Confirm</Button>
+                            <Button 
+                                onClick={() => handleConfirmEdit(user.id)}
+                                variant="contained" 
+                                color="primary" 
+                                size="small"  /* Small size for the button */
+                            >
+                                Confirm
+                            </Button>
                         </div>
                     ) : (
                         <ListItemText
