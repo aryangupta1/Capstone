@@ -2,21 +2,24 @@
 pragma solidity ^0.8.0;
 
 contract UserData {
-    mapping(address => string) private data;
+    string[] public data;
 
-    function storeData(string memory _data) public {
-        data[msg.sender] = _data;
+    function store(string memory _data) public {
+        data.push(_data);
     }
 
-    function retrieveData() public view returns (string memory) {
-        return data[msg.sender];
+    function retrieve() public view returns (string[] memory) {
+        return data;
     }
 
-    function editData(string memory _newData) public {
-        data[msg.sender] = _newData;
+    function update(uint index, string memory _data) public {
+        require(index < data.length, "Index out of bounds!");
+        data[index] = _data;
     }
 
-    function deleteData() public {
-        delete data[msg.sender];
+    function remove(uint index) public {
+        require(index < data.length, "Index out of bounds!");
+        data[index] = data[data.length - 1];
+        data.pop();
     }
 }

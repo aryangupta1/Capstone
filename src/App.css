@@ -1,11 +1,67 @@
-.App {
-  font-family: Arial, sans-serif;
-  text-align: center;
+/* Global Styles */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main Container */
+.container {
+  padding-top: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
   padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  text-align: center;
+/* List Items */
+.list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
+.list-item input[type="text"] {
+  flex: 1;
+  margin-right: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 
+/* Buttons */
+.button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.button-primary {
+  background-color: #1976d2;
+  color: #ffffff;
+}
+
+.button-primary:hover {
+  background-color: #1565c0;
+}
+
+.button-secondary {
+  background-color: #dc004e;
+  color: #ffffff;
+}
+
+.button-secondary:hover {
+  background-color: #c00045;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
