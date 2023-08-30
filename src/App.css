@@ -65,3 +65,19 @@ body {
   justify-content: space-between;
   margin-top: 20px;
 }
+
+.feedback-succeeded {
+  background-color: #DFF0D8;
+  color: #3C763D;
+  border: 1px solid #D6E9C6;
+  /* More styles... */
+}
+
+.feedback-failed {
+  background-color: #F2DEDE;
+  color: #A94442;
+  border: 1px solid #EBCCD1;
+  /* More styles... */
+}
+
+/* ... similarly for 'pending' etc. */
