@@ -16,6 +16,8 @@ declare global {
 
 function App() {
   const [web3Instance, setWeb3Instance] = useState<Web3 | null>(null);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => { // <-- Use the useEffect hook
     if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
@@ -23,17 +25,21 @@ function App() {
       const provider = window['ethereum'] || window.web3.currentProvider
       const web3 = new Web3(provider)
       setWeb3Instance(web3)
+      setLoading(false)
+      console.log(web3Instance)
+
     } else {
       console.log('No web3 detected. Falling back to localhost:7545. You should consider trying MetaMask!')
       const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"))
       setWeb3Instance(web3)
+      setLoading(false)
     }
   }, []); // <-- Empty dependency array ensures this runs only once when the component mounts
 
   return (
     <div className="App">
       <h1>Decentralized Data Storage</h1>
-      <Dashboard web3={web3Instance} />
+      {loading ? <p>Loading...</p> : <Dashboard web3={web3Instance} />}
     </div>
   );
 }
