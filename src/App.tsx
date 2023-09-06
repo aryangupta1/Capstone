@@ -1,83 +1,83 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState } from 'react'
+import './App.css'
 
-import Web3 from 'web3';
-import { Button, TextField, Container, Typography, List, ListItem, IconButton } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import Web3 from 'web3'
+import { Button, TextField, Container, Typography, List, ListItem, IconButton } from '@mui/material'
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 
-const web3 = new Web3(Web3.givenProvider || 'http://localhost:7545');
-const contractAddress = '0x5248D9Ed445fFaD6af6E2B4C4a4859eDd48A7187';
-const abi = require('./Datachain/build/contracts/UserData.json').abi;
+const web3 = new Web3(Web3.givenProvider || 'http://localhost:7545')
+const contractAddress = '0x5248D9Ed445fFaD6af6E2B4C4a4859eDd48A7187'
+const abi = require('./Datachain/build/contracts/UserData.json').abi
 
 interface UserDataContract {
   methods: {
     store(data: string): {
-      send(transactionObject: { from: string }): Promise<any>;
-    };
+      send(transactionObject: { from: string }): Promise<any>
+    }
     update(index: number, data: string): {
-      send(transactionObject: { from: string }): Promise<any>;
-    };
+      send(transactionObject: { from: string }): Promise<any>
+    }
     retrieve(): {
-      call(transactionObject: { from: string }): Promise<string[]>;
-    };
+      call(transactionObject: { from: string }): Promise<string[]>
+    }
     remove(index: number): {
-      send(transactionObject: { from: string }): Promise<any>;
-    };
-  };
+      send(transactionObject: { from: string }): Promise<any>
+    }
+  }
 }
 
-const contract = new web3.eth.Contract(abi, contractAddress) as unknown as UserDataContract;
+const contract = new web3.eth.Contract(abi, contractAddress) as unknown as UserDataContract
 
 function App() {
-  const [data, setData] = useState<string[]>([]);
-  const [newData, setNewData] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
+  const [data, setData] = useState<string[]>([])
+  const [newData, setNewData] = useState<string>('')
+  const [message, setMessage] = useState<string>('')
 
   async function fetchData() {
     try {
-      const accounts = await web3.eth.getAccounts();
-      const result: string[] = await contract.methods.retrieve().call({ from: accounts[0] });
-      setData(result);
-      setMessage('Data retrieved successfully!');
+      const accounts = await web3.eth.getAccounts()
+      const result: string[] = await contract.methods.retrieve().call({ from: accounts[0] })
+      setData(result)
+      setMessage('Data retrieved successfully!')
     } catch (error) {
-      setMessage(`Error fetching data: ${error}`);
-      console.error("Error fetching data:", error);
+      setMessage(`Error fetching data: ${error}`)
+      console.error("Error fetching data:", error)
     }
   }
 
   async function updateData(index: number, newData: string) {
     try {
-      const accounts = await web3.eth.getAccounts();
-      const receipt = await contract.methods.update(index, newData).send({ from: accounts[0] });
-      setMessage(`Data updated! Transaction Hash: ${receipt.transactionHash}`);
+      const accounts = await web3.eth.getAccounts()
+      const receipt = await contract.methods.update(index, newData).send({ from: accounts[0] })
+      setMessage(`Data updated! Transaction Hash: ${receipt.transactionHash}`)
     } catch (error) {
-      setMessage(`Error updating data: ${error}`);
-      console.error("Error updating data:", error);
+      setMessage(`Error updating data: ${error}`)
+      console.error("Error updating data:", error)
     }
   }
 
   async function storeData() {
     try {
       const accounts = await web3.eth.getAccounts();
-      const receipt = await contract.methods.store(newData).send({ from: accounts[0] });
-      setData(prevData => [...prevData, newData]);
-      setNewData(''); // Clear the new data input after storing
-      setMessage(`Data stored! Transaction Hash: ${receipt.transactionHash}`);
+      const receipt = await contract.methods.store(newData).send({ from: accounts[0] })
+      setData(prevData => [...prevData, newData])
+      setNewData('') // Clear the new data input after storing
+      setMessage(`Data stored! Transaction Hash: ${receipt.transactionHash}`)
     } catch (error) {
-      setMessage(`Error storing data: ${error}`);
-      console.error("Error storing data:", error);
+      setMessage(`Error storing data: ${error}`)
+      console.error("Error storing data:", error)
     }
   }
 
   async function deleteData(index: number) {
     try {
-      const accounts = await web3.eth.getAccounts();
-      const receipt = await contract.methods.remove(index).send({ from: accounts[0] });
-      setData(prevData => prevData.filter((_, i) => i !== index));
-      setMessage(`Data deleted! Transaction Hash: ${receipt.transactionHash}`);
+      const accounts = await web3.eth.getAccounts()
+      const receipt = await contract.methods.remove(index).send({ from: accounts[0] })
+      setData(prevData => prevData.filter((_, i) => i !== index))
+      setMessage(`Data deleted! Transaction Hash: ${receipt.transactionHash}`)
     } catch (error) {
-      setMessage(`Error deleting data: ${error}`);
-      console.error("Error deleting data:", error);
+      setMessage(`Error deleting data: ${error}`)
+      console.error("Error deleting data:", error)
     }
   }
 
