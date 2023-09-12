@@ -8,48 +8,30 @@ contract Storage {
         string content;
     }
 
-    event DataCreated (
-        uint id,
-        string content
-    );
-
-    event DataUpdated (
-        uint id,
-        string newContent
-    );
-
-    event DataDeleted(uint id);
-
-
-    // constructor() {
-    //     createData("Hello World");
-    // }
-
-    mapping(address => mapping(uint => Data)) public allData;
-    mapping(address => uint) public dataCount;
+    mapping(address => Data[]) private userDatas;
 
     function createData(string memory _content) public {
-        uint count = dataCount[msg.sender];
-        allData[msg.sender][count] = Data(count, _content);
-        emit DataCreated(count, _content);
-        dataCount[msg.sender]++;
+        uint id = userDatas[msg.sender].length;
+        Data memory newData = Data(id, _content);
+        userDatas[msg.sender].push(newData);
     }
 
     function editData(uint _id, string memory _newContent) public {
-        require(_id < dataCount[msg.sender], "ID not found for the sender");
-        allData[msg.sender][_id].content = _newContent;
-        emit DataUpdated(_id, _newContent);
+        require(_id < userDatas[msg.sender].length, "ID not found for the sender");
+        userDatas[msg.sender][_id].content = _newContent;
     }
 
     function deleteData(uint _id) public {
-    require(_id < dataCount[msg.sender], "ID not found for the sender");
-
-    for (uint i = _id; i < dataCount[msg.sender] - 1; i++) {
-        allData[msg.sender][i] = allData[msg.sender][i+1];
+        require(_id < userDatas[msg.sender].length, "ID not found for the sender");
+        delete userDatas[msg.sender][_id];
     }
-    delete allData[msg.sender][dataCount[msg.sender] - 1];
-    dataCount[msg.sender]--;
 
-    emit DataDeleted(_id);
-}
+    function getDataCount(address _user) public view returns (uint) {
+        return userDatas[_user].length;
+    }
+
+    function getData(address _user, uint _id) public view returns (Data memory) {
+        require(_id < userDatas[_user].length, "ID not found for the specified user");
+        return userDatas[_user][_id];
+    }
 }

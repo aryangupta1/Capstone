@@ -11,13 +11,13 @@ export const load = async () => {
 };
 
 const loadData = async (storageContract, addressAccount) => {
-    const dataCount = await storageContract.dataCount(addressAccount);
+    const dataCount = await storageContract.getDataCount(addressAccount);
     const allData = [];
-    for (var i = 0; i < dataCount; i++) {
-        const data = await storageContract.allData(addressAccount, i);
+    for (var i = 0; i < dataCount.toNumber(); i++) {
+        const data = await storageContract.getData(addressAccount, i);
         allData.push(data);
     }
-    return allData
+    return allData;
 };
 
 const loadContract = async (addressAccount) => {
@@ -26,7 +26,7 @@ const loadContract = async (addressAccount) => {
     const storageContract = await theContract.deployed();
     const allData = await loadData(storageContract, addressAccount);
 
-    return { storageContract, allData }
+    return { storageContract, allData };
 };
 
 const loadAccount = async () => {
