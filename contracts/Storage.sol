@@ -13,6 +13,14 @@ contract Storage {
         string content
     );
 
+    event DataUpdated (
+        uint id,
+        string newContent
+    );
+
+    event DataDeleted(uint id);
+
+
     // constructor() {
     //     createData("Hello World");
     // }
@@ -26,4 +34,22 @@ contract Storage {
         emit DataCreated(count, _content);
         dataCount[msg.sender]++;
     }
+
+    function editData(uint _id, string memory _newContent) public {
+        require(_id < dataCount[msg.sender], "ID not found for the sender");
+        allData[msg.sender][_id].content = _newContent;
+        emit DataUpdated(_id, _newContent);
+    }
+
+    function deleteData(uint _id) public {
+    require(_id < dataCount[msg.sender], "ID not found for the sender");
+
+    for (uint i = _id; i < dataCount[msg.sender] - 1; i++) {
+        allData[msg.sender][i] = allData[msg.sender][i+1];
+    }
+    delete allData[msg.sender][dataCount[msg.sender] - 1];
+    dataCount[msg.sender]--;
+
+    emit DataDeleted(_id);
+}
 }
