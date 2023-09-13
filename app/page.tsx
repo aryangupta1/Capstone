@@ -15,6 +15,9 @@ import {
   Spinner
 } from "@chakra-ui/react";
 import { load } from "../src/func";
+import { DisplayAddress } from "./components/displayAddress";
+import { FaEthereum } from "react-icons/fa";
+
 
 const Home: NextPage = () => {
   const [input, setInput] = React.useState("");
@@ -98,6 +101,8 @@ const Home: NextPage = () => {
           <Spacer />
         </HStack>
         <Text>Your Data</Text>
+        <DisplayAddress addressAccount={addressAccount} />
+
         {!allData ? (
           <Spinner />
         ) : (
