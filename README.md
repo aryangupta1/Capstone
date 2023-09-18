@@ -1,7 +1,16 @@
 # 41030 Engineering Capstone 
 ## Secure data management and storage using decentralised applications (web3)
-## Running the application
-`yarn dev`
+## Running the frontend
+In root run:
+```
+yarn dev
+```
+## Running the backend
+In `backend/`
+```
+npm run start
+```
+
 ## Compiling Smart contract
 ```
 truffle compile
