@@ -1,35 +1,50 @@
 "use client";
 import type { NextPage } from "next";
 import Head from "next/head";
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Box,
+  Button,
   ChakraProvider,
-  VStack,
   HStack,
   Heading,
-  Text,
-  Button,
   Input,
-  Box,
   Spacer,
-  Spinner
+  Spinner,
+  Text,
+  VStack,
 } from "@chakra-ui/react";
 import { load } from "../src/func";
 import { DisplayAddress } from "./components/displayAddress";
 import { FaEthereum } from "react-icons/fa";
 
-
 const Home: NextPage = () => {
   const [input, setInput] = React.useState("");
   const [editInput, setEditInput] = React.useState("");
+  const [isEditing, setIsEditing] = React.useState(false);
   const [refresh, setRefresh] = React.useState(true);
   const [addressAccount, setAddressAccount] = React.useState(null);
   const [contract, setContract] = React.useState(null);
   const [allData, setData] = React.useState([]);
-  const [currentEditingIndex, setCurrentEditingIndex] = React.useState<number | null>(null);
+  const [toBeDeletedIdx, setToBeDeletedIdx] = React.useState<number | null>(null);
+  const [toBeEditedIdx, setToBeEditedIdx] = React.useState<number | null>(null);
+
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+  const [isEditAlertOpen, setIsEditAlertOpen] = React.useState(false);
+
+  const cancelRef = useRef();
 
   const handleInputChange = useCallback((e: any) => setInput(e.target.value), []);
   const handleEditInputChange = useCallback((e: any) => setEditInput(e.target.value), []);
+
+  const onCloseDeleteAlert = () => setIsDeleteAlertOpen(false);
+  const onCloseEditAlert = () => setIsEditAlertOpen(false);
 
   const handleAddData = async () => {
     if (contract && addressAccount) {
@@ -43,9 +58,25 @@ const Home: NextPage = () => {
     if (contract && addressAccount) {
       await contract.editData(idx, editInput, { from: addressAccount });
       setEditInput("");
-      setCurrentEditingIndex(null);
+      setToBeEditedIdx(null);
       setRefresh(true);
     }
+  };
+
+  const handleStartEditing = (idx: number, content: string) => {
+    setToBeEditedIdx(idx);
+    setEditInput(content);
+    setIsEditing(true);
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setToBeEditedIdx(null);
+  };
+
+  const handleTriggerEdit = () => {
+    setIsEditAlertOpen(true);
+    setIsEditing(false);
   };
 
   const handleDeleteData = async (idx: number) => {
@@ -53,7 +84,17 @@ const Home: NextPage = () => {
       await contract.deleteData(idx, { from: addressAccount });
       setRefresh(true);
     }
-  }
+  };
+
+  const handleDeleteDataConfirmed = async () => {
+    if (toBeDeletedIdx !== null) await handleDeleteData(toBeDeletedIdx);
+    onCloseDeleteAlert();
+  };
+
+  const handleEditDataConfirmed = async () => {
+    if (toBeEditedIdx !== null) await handleEditData(toBeEditedIdx);
+    onCloseEditAlert();
+  };
 
   React.useEffect(() => {
     if (!refresh) return;
@@ -102,35 +143,85 @@ const Home: NextPage = () => {
         </HStack>
         <Text>Your Data</Text>
         <DisplayAddress addressAccount={addressAccount} />
-
         {!allData ? (
           <Spinner />
         ) : (
           allData.map((data, idx) => (
-            <HStack key={idx} w="md" bg="gray.100" borderRadius={7}>
-              <Box w="5px" />
-              {currentEditingIndex === idx ? (
-                <>
-                  <Input type="text" value={editInput} onChange={handleEditInputChange} />
-                  <Button onClick={() => handleEditData(idx)} bg="blue.200">Save</Button>
-                  <Button onClick={() => setCurrentEditingIndex(null)} bg="red.200">Cancel</Button>
-                </>
-              ) : (
-                <>
-                  <Text>{data.content}</Text>
-                  <Spacer />
-                  <Button onClick={() => {
-                    setEditInput(data.content);
-                    setCurrentEditingIndex(idx);
-                  }} bg="yellow.200">Edit</Button>
-                  <Button onClick={() => handleDeleteData(idx)} bg="red.300">Delete</Button>
-                </>
-              )}
-            </HStack>
+          <HStack key={idx} w="md" bg="gray.100" borderRadius={7}>
+          <Box w="5px" />
+          {isEditing && toBeEditedIdx === idx ? (
+            <>
+              <Input type="text" value={editInput} onChange={handleEditInputChange} />
+              <Button onClick={handleTriggerEdit} bg="blue.200">Edit</Button>
+              <Button onClick={handleCancelEditing} bg="red.200">Cancel</Button>
+            </>
+          ) : (
+            <>
+              <Text>{data.content}</Text>
+              <Spacer />
+              <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200">Edit</Button>
+              <Button onClick={() => {
+                setToBeDeletedIdx(idx);
+                setIsDeleteAlertOpen(true);
+              }} bg="red.300">Delete</Button>
+            </>
+          )}
+          </HStack>
           ))
         )}
-        <Box h="10px" />
       </VStack>
+
+      {/* Delete AlertDialog */}
+      <AlertDialog
+        isOpen={isDeleteAlertOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDeleteAlert}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Data
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this data? This action cannot be undone.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseDeleteAlert}>
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteDataConfirmed} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      {/* Edit AlertDialog */}
+      <AlertDialog
+        isOpen={isEditAlertOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseEditAlert}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Edit Data
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to edit this data? This action will overwrite the existing data.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onCloseEditAlert}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue" onClick={handleEditDataConfirmed} ml={3}>
+                Edit
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </ChakraProvider>
   );
 };
