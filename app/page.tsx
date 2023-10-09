@@ -38,6 +38,9 @@ const Home: NextPage = () => {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
   const [isEditAlertOpen, setIsEditAlertOpen] = React.useState(false);
 
+  const [decryptedContent, setDecryptedContent] = React.useState<Record<number, string>>({});
+
+
   const cancelRef = useRef();
 
   const handleInputChange = useCallback((e: any) => setInput(e.target.value), []);
@@ -47,19 +50,43 @@ const Home: NextPage = () => {
   const onCloseEditAlert = () => setIsEditAlertOpen(false);
 
   const handleAddData = async () => {
-    if (contract && addressAccount) {
-      await contract.createData(input, { from: addressAccount });
-      setInput("");
-      setRefresh(true);
+    if (input) {
+      try {
+        const res = await fetch('http://localhost:3001/encrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plaintext: input })
+        });
+        const { dhtKey } = await res.json();
+        if (contract && addressAccount) {
+          await contract.createData(dhtKey, { from: addressAccount });
+          setInput("");
+          setRefresh(true);
+        }
+      } catch (error) {
+        console.error('Error during encryption:', error);
+      }
     }
-  };
+  }
 
   const handleEditData = async (idx: number) => {
-    if (contract && addressAccount) {
-      await contract.editData(idx, editInput, { from: addressAccount });
-      setEditInput("");
-      setToBeEditedIdx(null);
-      setRefresh(true);
+    if (editInput) {
+      try {
+        const res = await fetch('http://localhost:3001/encrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plaintext: editInput })
+        });
+        const { dhtKey } = await res.json();
+        if (contract && addressAccount) {
+          await contract.editData(idx, dhtKey, { from: addressAccount });
+          setEditInput("");
+          setToBeEditedIdx(null);
+          setRefresh(true);
+        }
+      } catch (error) {
+        console.error('Error during encryption:', error);
+      }
     }
   };
 
@@ -95,6 +122,32 @@ const Home: NextPage = () => {
     if (toBeEditedIdx !== null) await handleEditData(toBeEditedIdx);
     onCloseEditAlert();
   };
+
+  const handleDecrypt = async (idx: number, dhtKey: string) => {
+    try {
+      const res = await fetch('http://localhost:3001/decrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dhtKey })
+      });
+    
+      if (!res.ok) {
+        // This will log the error message from the server if there's one, or a generic message
+        console.error('Error during decryption:', await res.json().then(obj => obj.message || res.statusText).catch(() => res.statusText));
+        return;
+      }
+      
+      const { decryptedData } = await res.json();
+        
+      // Set the decrypted content in the state
+      setDecryptedContent(prev => ({ ...prev, [idx]: decryptedData }));
+    } catch (error) {
+      console.error('Error during decryption:', error);
+    }
+
+  };
+  
+  
 
   React.useEffect(() => {
     if (!refresh) return;
@@ -146,29 +199,30 @@ const Home: NextPage = () => {
         {!allData ? (
           <Spinner />
         ) : (
-          allData.map((data, idx) => (
+        allData.map((data, idx) => (
           <HStack key={idx} w="md" bg="gray.100" borderRadius={7}>
-          <Box w="5px" />
-          {isEditing && toBeEditedIdx === idx ? (
-            <>
-              <Input type="text" value={editInput} onChange={handleEditInputChange} />
-              <Button onClick={handleTriggerEdit} bg="blue.200">Edit</Button>
-              <Button onClick={handleCancelEditing} bg="red.200">Cancel</Button>
-            </>
-          ) : (
-            <>
-              <Text>{data.content}</Text>
-              <Spacer />
-              <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200">Edit</Button>
-              <Button onClick={() => {
-                setToBeDeletedIdx(idx);
-                setIsDeleteAlertOpen(true);
-              }} bg="red.300">Delete</Button>
-            </>
-          )}
+            <Box w="5px" />
+            {isEditing && toBeEditedIdx === idx ? (
+              <>
+                <Input type="text" value={editInput} onChange={handleEditInputChange} />
+                <Button onClick={handleTriggerEdit} bg="blue.200">Edit</Button>
+                <Button onClick={handleCancelEditing} bg="red.200">Cancel</Button>
+              </>
+            ) : (
+              <>
+                <Text>{decryptedContent[idx] ? decryptedContent[idx] : data.content}</Text>
+                <Spacer />
+                <Button onClick={() => handleDecrypt(idx, data.content)} bg="blue.300">Decrypt</Button>
+                <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200">Edit</Button>
+                <Button onClick={() => {
+                  setToBeDeletedIdx(idx);
+                  setIsDeleteAlertOpen(true);
+                }} bg="red.300">Delete</Button>
+              </>
+            )}
           </HStack>
-          ))
-        )}
+        ))
+      )}
       </VStack>
 
       {/* Delete AlertDialog */}

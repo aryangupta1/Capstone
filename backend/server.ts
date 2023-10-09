@@ -1,26 +1,25 @@
 import express, { Request, Response } from 'express';
 import crypto from 'crypto';
+import cors from 'cors';
 
 // Mock Certificateless Crypto Class
 class CertificatelessCrypto {
   static publicKey = 'somePublickey';
   static privateKey = 'somePrivateKey';
-
+  static salt = 'someSalt'; // Added salt for "encryption" and "decryption"
+  
   static encrypt(data: string, publicKey: string): string {
-    // Mock encryption using hash (just for demonstration, not real encryption)
-    const hash = crypto.createHash('sha256');
-    hash.update(data + publicKey);
-    return hash.digest('hex');
+    // Mock encryption by appending salt and publicKey
+    return data + this.salt + publicKey;
   }
-
+  
   static decrypt(data: string, privateKey: string): string {
-    // Mock decryption (Note: This is just reversing our mock encryption, not real decryption)
-    const hash = crypto.createHash('sha256');
-    hash.update(data + privateKey);
-    return hash.digest('hex');
+    // Mock decryption by removing salt and publicKey
+    const rawData = data.replace(this.salt + this.publicKey, '');
+    return rawData;
   }
-
 }
+
 
 // Mock DHT Storage Class
 class DHTStorage {
@@ -36,6 +35,8 @@ class DHTStorage {
 }
 
 const app = express();
+app.use(cors())
+
 const PORT = 3001;
 
 app.use(express.json());
@@ -55,16 +56,19 @@ app.post('/encrypt', (req: Request, res: Response) => {
 });
 
 app.post('/decrypt', (req: Request, res: Response) => {
+  console.log('decrypt endpoint hit, dhtKey:', req.body.dhtKey)
   const dhtKey = req.body.dhtKey;
   const encryptedData = DHTStorage.get(dhtKey);
 
   if (!encryptedData) {
+    console.log('encryptedData not found for dhtKey:', dhtKey);
     return res.status(404).json({ message: 'Data not found' });
   }
 
   const decryptedData = CertificatelessCrypto.decrypt(encryptedData, CertificatelessCrypto.privateKey);
   res.json({ decryptedData });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
