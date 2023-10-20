@@ -22,7 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { load } from "../src/func";
 import { DisplayAddress } from "./components/displayAddress";
-import { FaEthereum } from "react-icons/fa";
+import { SHA256 } from "crypto-js"
 
 const Home: NextPage = () => {
   const [input, setInput] = React.useState("");
@@ -147,6 +147,34 @@ const Home: NextPage = () => {
 
   };
   
+  async function mineBlock() {
+    const response = await fetch('http://localhost:3001/mine');
+    const { previousHash, difficulty } = await response.json();
+  
+    let nonce = 0;
+    let hash;
+    do {
+      const data = previousHash + nonce;
+      hash = SHA256(data).toString(); // Use SHA256 hashing function
+      nonce++;
+    } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+  
+    const result = await fetch('http://localhost:3001/submitSolution', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ nonce })
+    });
+  
+    const { success, message } = await result.json();
+    if (success) {
+      console.log(message);
+    } else {
+      console.error('Failed to mine block:', message);
+    }
+  }
+  
   
 
   React.useEffect(() => {
@@ -188,6 +216,9 @@ const Home: NextPage = () => {
               onChange={handleInputChange}
               value={input}
             />
+            <Button onClick={mineBlock} bg="blue.200">
+              Mine Block
+            </Button>
             <Button onClick={handleAddData} bg="green.200">
               Add Data
             </Button>
