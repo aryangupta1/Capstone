@@ -67,6 +67,7 @@ const Home: NextPage = () => {
           await contract.createData(dhtKey, { from: addressAccount });
           setInput("");
           setRefresh(true);
+          setIsBlockMined(false)
         }
       } catch (error) {
         console.error('Error during encryption:', error);
@@ -88,6 +89,7 @@ const Home: NextPage = () => {
           setEditInput("");
           setToBeEditedIdx(null);
           setRefresh(true);
+          setIsBlockMined(false)
         }
       } catch (error) {
         console.error('Error during encryption:', error);
@@ -115,6 +117,7 @@ const Home: NextPage = () => {
     if (contract && addressAccount) {
       await contract.deleteData(idx, { from: addressAccount });
       setRefresh(true);
+      setIsBlockMined(false)
     }
   };
 
@@ -203,6 +206,7 @@ const Home: NextPage = () => {
       }
       
     } catch (error) {
+      setIsBlockMined(false)
       console.error('Failed to mine block:', error);
       toast({
         title: "Network error.",
