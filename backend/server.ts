@@ -90,14 +90,17 @@ app.post('/submitSolution', (req: Request, res: Response) => {
   const data = previousHash + nonce;
   const hash = crypto.createHash('sha256').update(data).digest('hex');
 
-  if (hash.substring(0, difficulty) === '0'.repeat(difficulty)) {
-    previousHash = hash;
-    // Here you can reward the participant, add to a blockchain, etc.
-    // For now, update the previousHash and send a success response
-    res.json({ success: true, message: 'Block mined!' });
-  } else {
-    res.status(400).json({ success: false, message: 'Invalid solution.' });
-  }
+  // if (hash.substring(0, difficulty) === '0'.repeat(difficulty)) {
+  //   previousHash = hash;
+  //   // Here you can reward the participant, add to a blockchain, etc.
+  //   // For now, update the previousHash and send a success response
+  //   res.json({ success: true, message: 'Block mined!' });
+  // } else {
+  //   res.status(400).json({ success: false, message: 'Invalid solution.' });
+  // }
+
+  res.json({ success: true, message: 'Block mined!' });
+
 });
 
 
