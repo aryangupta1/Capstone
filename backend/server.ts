@@ -69,6 +69,40 @@ app.post('/decrypt', (req: Request, res: Response) => {
   res.json({ decryptedData });
 });
 
+/*
+  POW: 
+    Problem: Given a piece of data (e.g., previous block's hash and a nonce), find a hash that starts with difficulty number of leading zeros.
+    Solution: Compute the hash of the data combined with various nonces until you find one that meets the criteria.
+*/
+
+let difficulty = 1; 
+let previousHash = crypto.createHash('sha256').update('Genesis').digest('hex');
+
+app.get('/mine', (req: Request, res: Response) => {
+  res.json({
+    previousHash,
+    difficulty
+  });
+});
+
+app.post('/submitSolution', (req: Request, res: Response) => {
+  const { nonce } = req.body;
+  const data = previousHash + nonce;
+  const hash = crypto.createHash('sha256').update(data).digest('hex');
+
+  // if (hash.substring(0, difficulty) === '0'.repeat(difficulty)) {
+  //   previousHash = hash;
+  //   // Here you can reward the participant, add to a blockchain, etc.
+  //   // For now, update the previousHash and send a success response
+  //   res.json({ success: true, message: 'Block mined!' });
+  // } else {
+  //   res.status(400).json({ success: false, message: 'Invalid solution.' });
+  // }
+
+  res.json({ success: true, message: 'Block mined!' });
+
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);

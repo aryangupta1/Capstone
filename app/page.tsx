@@ -18,11 +18,12 @@ import {
   Spacer,
   Spinner,
   Text,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import { load } from "../src/func";
 import { DisplayAddress } from "./components/displayAddress";
-import { FaEthereum } from "react-icons/fa";
+import { SHA256 } from "crypto-js"
 
 const Home: NextPage = () => {
   const [input, setInput] = React.useState("");
@@ -40,6 +41,8 @@ const Home: NextPage = () => {
 
   const [decryptedContent, setDecryptedContent] = React.useState<Record<number, string>>({});
 
+  const [isBlockMined, setIsBlockMined] = React.useState(false);
+
 
   const cancelRef = useRef();
 
@@ -48,6 +51,8 @@ const Home: NextPage = () => {
 
   const onCloseDeleteAlert = () => setIsDeleteAlertOpen(false);
   const onCloseEditAlert = () => setIsEditAlertOpen(false);
+
+  const toast = useToast();
 
   const handleAddData = async () => {
     if (input) {
@@ -62,6 +67,7 @@ const Home: NextPage = () => {
           await contract.createData(dhtKey, { from: addressAccount });
           setInput("");
           setRefresh(true);
+          setIsBlockMined(false)
         }
       } catch (error) {
         console.error('Error during encryption:', error);
@@ -83,6 +89,7 @@ const Home: NextPage = () => {
           setEditInput("");
           setToBeEditedIdx(null);
           setRefresh(true);
+          setIsBlockMined(false)
         }
       } catch (error) {
         console.error('Error during encryption:', error);
@@ -110,6 +117,7 @@ const Home: NextPage = () => {
     if (contract && addressAccount) {
       await contract.deleteData(idx, { from: addressAccount });
       setRefresh(true);
+      setIsBlockMined(false)
     }
   };
 
@@ -141,14 +149,76 @@ const Home: NextPage = () => {
         
       // Set the decrypted content in the state
       setDecryptedContent(prev => ({ ...prev, [idx]: decryptedData }));
+      setIsBlockMined(false)
     } catch (error) {
       console.error('Error during decryption:', error);
     }
 
   };
   
+  async function mineBlock() {
+    try {
+      const response = await fetch('http://localhost:3001/mine');
+      const { previousHash, difficulty } = await response.json();
+    
+      let nonce = 0;
+      let hash;
+      do {
+        const data = previousHash + nonce;
+        hash = SHA256(data).toString(); // Use SHA256 hashing function
+        nonce++;
+      } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+    
+      const result = await fetch('http://localhost:3001/submitSolution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nonce })
+      });
+    
+      if (result.status === 200) {
+        const { message } = await result.json();
+        setIsBlockMined(true)
+        toast({
+          title: "Block successfully mined.",
+          description: message,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (result.status === 400) {
+        const { message } = await result.json();
+        toast({
+          title: "Invalid solution.",
+          description: message,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Something went wrong.",
+          description: "Please try again later.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+      
+    } catch (error) {
+      setIsBlockMined(false)
+      console.error('Failed to mine block:', error);
+      toast({
+        title: "Network error.",
+        description: "Failed to connect. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
   
-
   React.useEffect(() => {
     if (!refresh) return;
 
@@ -188,7 +258,10 @@ const Home: NextPage = () => {
               onChange={handleInputChange}
               value={input}
             />
-            <Button onClick={handleAddData} bg="green.200">
+            <Button onClick={mineBlock} bg="blue.200">
+              Mine Block
+            </Button>
+            <Button onClick={handleAddData} bg="green.200" isDisabled={!isBlockMined}>
               Add Data
             </Button>
           </VStack>
@@ -212,12 +285,12 @@ const Home: NextPage = () => {
               <>
                 <Text>{decryptedContent[idx] ? decryptedContent[idx] : data.content}</Text>
                 <Spacer />
-                <Button onClick={() => handleDecrypt(idx, data.content)} bg="blue.300">Decrypt</Button>
-                <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200">Edit</Button>
+                <Button onClick={() => handleDecrypt(idx, data.content)} bg="blue.300" isDisabled={!isBlockMined}>Decrypt</Button>
+                <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200" isDisabled={!isBlockMined}>Edit</Button>
                 <Button onClick={() => {
                   setToBeDeletedIdx(idx);
                   setIsDeleteAlertOpen(true);
-                }} bg="red.300">Delete</Button>
+                }} bg="red.300" isDisabled={!isBlockMined}>Delete</Button>
               </>
             )}
           </HStack>
