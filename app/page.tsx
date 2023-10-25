@@ -18,6 +18,7 @@ import {
   Spacer,
   Spinner,
   Text,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import { load } from "../src/func";
@@ -40,6 +41,8 @@ const Home: NextPage = () => {
 
   const [decryptedContent, setDecryptedContent] = React.useState<Record<number, string>>({});
 
+  const [isBlockMined, setIsBlockMined] = React.useState(false);
+
 
   const cancelRef = useRef();
 
@@ -48,6 +51,8 @@ const Home: NextPage = () => {
 
   const onCloseDeleteAlert = () => setIsDeleteAlertOpen(false);
   const onCloseEditAlert = () => setIsEditAlertOpen(false);
+
+  const toast = useToast();
 
   const handleAddData = async () => {
     if (input) {
@@ -148,35 +153,67 @@ const Home: NextPage = () => {
   };
   
   async function mineBlock() {
-    const response = await fetch('http://localhost:3001/mine');
-    const { previousHash, difficulty } = await response.json();
-  
-    let nonce = 0;
-    let hash;
-    do {
-      const data = previousHash + nonce;
-      hash = SHA256(data).toString(); // Use SHA256 hashing function
-      nonce++;
-    } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
-  
-    const result = await fetch('http://localhost:3001/submitSolution', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ nonce })
-    });
-  
-    const { success, message } = await result.json();
-    if (success) {
-      console.log(message);
-    } else {
-      console.error('Failed to mine block:', message);
+    try {
+      const response = await fetch('http://localhost:3001/mine');
+      const { previousHash, difficulty } = await response.json();
+    
+      let nonce = 0;
+      let hash;
+      do {
+        const data = previousHash + nonce;
+        hash = SHA256(data).toString(); // Use SHA256 hashing function
+        nonce++;
+      } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+    
+      const result = await fetch('http://localhost:3001/submitSolution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nonce })
+      });
+    
+      if (result.status === 200) {
+        const { message } = await result.json();
+        setIsBlockMined(true)
+        toast({
+          title: "Block mined.",
+          description: message,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (result.status === 400) {
+        const { message } = await result.json();
+        toast({
+          title: "Invalid solution.",
+          description: message,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Something went wrong.",
+          description: "Please try again later.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+      
+    } catch (error) {
+      console.error('Failed to mine block:', error);
+      toast({
+        title: "Network error.",
+        description: "Failed to connect. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   }
   
-  
-
   React.useEffect(() => {
     if (!refresh) return;
 
@@ -219,7 +256,7 @@ const Home: NextPage = () => {
             <Button onClick={mineBlock} bg="blue.200">
               Mine Block
             </Button>
-            <Button onClick={handleAddData} bg="green.200">
+            <Button onClick={handleAddData} bg="green.200" isDisabled={!isBlockMined}>
               Add Data
             </Button>
           </VStack>
