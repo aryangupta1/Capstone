@@ -149,6 +149,7 @@ const Home: NextPage = () => {
         
       // Set the decrypted content in the state
       setDecryptedContent(prev => ({ ...prev, [idx]: decryptedData }));
+      setIsBlockMined(false)
     } catch (error) {
       console.error('Error during decryption:', error);
     }
@@ -180,7 +181,7 @@ const Home: NextPage = () => {
         const { message } = await result.json();
         setIsBlockMined(true)
         toast({
-          title: "Block mined.",
+          title: "Block successfully mined.",
           description: message,
           status: "success",
           duration: 5000,
@@ -284,12 +285,12 @@ const Home: NextPage = () => {
               <>
                 <Text>{decryptedContent[idx] ? decryptedContent[idx] : data.content}</Text>
                 <Spacer />
-                <Button onClick={() => handleDecrypt(idx, data.content)} bg="blue.300">Decrypt</Button>
-                <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200">Edit</Button>
+                <Button onClick={() => handleDecrypt(idx, data.content)} bg="blue.300" isDisabled={!isBlockMined}>Decrypt</Button>
+                <Button onClick={() => handleStartEditing(idx, data.content)} bg="yellow.200" isDisabled={!isBlockMined}>Edit</Button>
                 <Button onClick={() => {
                   setToBeDeletedIdx(idx);
                   setIsDeleteAlertOpen(true);
-                }} bg="red.300">Delete</Button>
+                }} bg="red.300" isDisabled={!isBlockMined}>Delete</Button>
               </>
             )}
           </HStack>
