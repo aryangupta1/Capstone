@@ -56,12 +56,11 @@ app.post('/encrypt', (req: Request, res: Response) => {
 });
 
 app.post('/decrypt', (req: Request, res: Response) => {
-  console.log('decrypt endpoint hit, dhtKey:', req.body.dhtKey)
   const dhtKey = req.body.dhtKey;
   const encryptedData = DHTStorage.get(dhtKey);
 
   if (!encryptedData) {
-    console.log('encryptedData not found for dhtKey:', dhtKey);
+    console.error('encryptedData not found for dhtKey:', dhtKey);
     return res.status(404).json({ message: 'Data not found' });
   }
 
